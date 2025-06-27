@@ -43,10 +43,3 @@ Every gamer and contributor pushing the boundaries of Web3 gaming
 
 Let the moles pop and the code roll! 🕹️🐹
 Happy hacking on StarkMole!
-
-
-
-
-
-
-

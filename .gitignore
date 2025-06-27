@@ -1,0 +1,57 @@
+# Cairo/Scarb
+target/
+Scarb.lock
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Node modules (if any JS tooling)
+node_modules/
+
+# Python cache (if any Python scripts)
+__pycache__/
+*.py[cod]
+
+# Temporary files
+*.tmp
+*.temp
+
+# Build artifacts
+*.sierra.json
+*.casm.json
+
+# Test artifacts
+test-results.json
+coverage/
+
+# Deployment artifacts
+deployments-local.json
+keystore/
+accounts/
+
+# Security
+*.pem
+*.key
+private_keys/

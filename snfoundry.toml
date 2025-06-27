@@ -1,0 +1,13 @@
+[sncast.default]
+account = "user"
+accounts-file = "~/.starknet_accounts/starknet_open_zeppelin_accounts.json"
+url = "http://127.0.0.1:5050/rpc"
+
+[snforge.default]
+# See more config options https://foundry-rs.github.io/starknet-foundry/projects/configuration.html
+fork = [
+    { name = "sepolia", url = "https://starknet-sepolia.public.blastapi.io/rpc/v0_7", block_id.number = 100000 }
+]
+
+[profile.ci]
+fork = []
