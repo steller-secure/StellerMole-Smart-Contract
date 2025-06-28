@@ -1,4 +1,4 @@
-use starknet::{ContractAddress, get_block_timestamp};
+use starknet::{get_block_timestamp};
 
 pub fn get_pseudo_random(seed: u64, max_value: u64) -> u64 {
     let timestamp = get_block_timestamp();

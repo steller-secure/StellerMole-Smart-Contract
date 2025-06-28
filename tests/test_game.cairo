@@ -66,7 +66,7 @@ fn test_end_game() {
     let game_id = game_contract.start_game();
     let final_score = game_contract.end_game(game_id);
 
-    assert(final_score == 0, 'Final score should be 0 for new game');
+    assert(final_score == 0, 'Final score should be 0');
 
     let (total_games, total_score, best_score) = game_contract.get_player_stats(player);
     assert(total_games == 1, 'Player should have 1 game');

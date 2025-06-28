@@ -2,16 +2,18 @@
 pub mod Leaderboard {
     use starkmole::interfaces::ILeaderboard;
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, Map};
+    use core::num::traits::Zero;
 
     #[storage]
     struct Storage {
-        scores: LegacyMap<ContractAddress, u64>,
-        player_ranks: LegacyMap<ContractAddress, u32>,
-        top_players: LegacyMap<u32, ContractAddress>, // rank -> player
+        scores: Map<ContractAddress, u64>,
+        player_ranks: Map<ContractAddress, u32>,
+        top_players: Map<u32, ContractAddress>, // rank -> player
         total_players: u32,
         current_season: u32,
-        season_winners: LegacyMap<u32, ContractAddress>,
-        season_end_time: LegacyMap<u32, u64>,
+        season_winners: Map<u32, ContractAddress>,
+        season_end_time: Map<u32, u64>,
         owner: ContractAddress,
         game_contract: ContractAddress,
     }
@@ -91,12 +93,12 @@ pub mod Leaderboard {
 
             while i <= limit && i <= 10 {
                 let player = self.top_players.read(i);
-                if player.is_non_zero() {
+                if !player.is_zero() {
                     let score = self.scores.read(player);
                     result.append((player, score));
                 }
                 i += 1;
-            }
+            };
 
             result
         }
@@ -120,14 +122,14 @@ pub mod Leaderboard {
 
             while i <= 10 {
                 let top_player = self.top_players.read(i);
-                if top_player.is_non_zero() {
+                if !top_player.is_zero() {
                     let top_score = self.scores.read(top_player);
                     if score <= top_score {
                         rank += 1;
                     }
                 }
                 i += 1;
-            }
+            };
 
             rank
         }
