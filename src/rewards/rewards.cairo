@@ -2,14 +2,15 @@
 pub mod Rewards {
     use starkmole::interfaces::IRewards;
     use starknet::{ContractAddress, get_caller_address};
+    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, Map};
 
     #[storage]
     struct Storage {
-        pending_rewards: LegacyMap<ContractAddress, u256>,
+        pending_rewards: Map<ContractAddress, u256>,
         total_rewards_distributed: u256,
         reward_multiplier: u256,
-        season_rewards: LegacyMap<u32, u256>,
-        claimed_rewards: LegacyMap<ContractAddress, u256>,
+        season_rewards: Map<u32, u256>,
+        claimed_rewards: Map<ContractAddress, u256>,
         owner: ContractAddress,
         leaderboard_contract: ContractAddress,
     }

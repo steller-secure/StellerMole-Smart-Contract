@@ -1,22 +1,22 @@
 #[starknet::contract]
 pub mod StarkMoleGame {
-    use core::convert::TryFrom; // Needed for u8::try_from(...)
     use starkmole::interfaces::IStarkMoleGame;
     use starkmole::utils::{calculate_score_multiplier, get_pseudo_random, is_valid_mole_position};
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
+    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, Map};
 
     #[storage]
     struct Storage {
         game_counter: u64,
-        games: LegacyMap<u64, Game>,
-        player_games: LegacyMap<ContractAddress, u64>,
-        player_stats: LegacyMap<ContractAddress, PlayerStats>,
+        games: Map<u64, Game>,
+        player_games: Map<ContractAddress, u64>,
+        player_stats: Map<ContractAddress, PlayerStats>,
         game_duration: u64,
         hit_cooldown: u64,
         owner: ContractAddress,
     }
 
-    #[derive(Drop, Serde, starknet::Store)]
+    #[derive(Drop, Serde, starknet::Store, Clone)]
     pub struct Game {
         pub player: ContractAddress,
         pub score: u64,
@@ -91,7 +91,7 @@ pub mod StarkMoleGame {
             let game_id = self.game_counter.read() + 1;
 
             // Generate initial mole position
-            let mole_position = u8::try_from(get_pseudo_random(game_id, 9)).unwrap();
+            let mole_position = get_pseudo_random(game_id, 9).try_into().unwrap();
 
             let new_game = Game {
                 player: caller,
@@ -146,8 +146,7 @@ pub mod StarkMoleGame {
                 // Generate new mole position
                 game
                     .current_mole_position =
-                        u8::try_from(get_pseudo_random(game_id + current_time, 9))
-                    .unwrap();
+                        get_pseudo_random(game_id + current_time, 9).try_into().unwrap();
 
                 self
                     .emit(
@@ -184,7 +183,7 @@ pub mod StarkMoleGame {
                 stats.best_score = final_score;
             }
 
-            self.games.write(game_id, game);
+            self.games.write(game_id, game.clone());
             self.player_stats.write(caller, stats);
 
             self.emit(GameEnded { game_id, player: caller, final_score, total_hits: game.hits });

@@ -45,5 +45,5 @@ fn test_get_pending_rewards() {
     let player = contract_address_const::<'player'>();
 
     let pending = rewards_contract.get_pending_rewards(player);
-    assert(pending == 0, 'Initial pending rewards should be 0');
+    assert(pending == 0, 'Initial pending should be 0');
 }
