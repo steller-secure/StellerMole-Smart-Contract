@@ -66,9 +66,18 @@ pub mod Leaderboard {
             let current_season = self.current_season.read();
             let current_score = self.scores.read(player);
 
+            // Check if this is a new player
+            let is_new_player = current_score == 0;
+
             // Only update if new score is better
             if score > current_score {
                 self.scores.write(player, score);
+
+                // If new player, increment total players count
+                if is_new_player {
+                    let total = self.total_players.read();
+                    self.total_players.write(total + 1);
+                }
 
                 // Update rankings (simplified implementation)
                 let current_rank = self._calculate_rank(player, score);
@@ -109,6 +118,14 @@ pub mod Leaderboard {
 
         fn get_season_winner(self: @ContractState, season: u32) -> ContractAddress {
             self.season_winners.read(season)
+        }
+
+        fn get_total_players(self: @ContractState) -> u32 {
+            self.total_players.read()
+        }
+
+        fn get_player_score(self: @ContractState, player: ContractAddress) -> u64 {
+            self.scores.read(player)
         }
     }
 
