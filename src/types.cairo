@@ -130,7 +130,7 @@ pub mod governance {
         pub action_index: u32,
         pub target: ContractAddress,
         pub value: u256,
-        pub calldata_hash: felt252, // hash of the calldata for verification
+        pub calldata_hash: felt252 // hash of the calldata for verification
     }
 
     // Vote receipt structure
@@ -147,24 +147,24 @@ pub mod governance {
     // Governance configuration
     #[derive(Drop, Serde, starknet::Store, Copy)]
     pub struct GovernanceConfig {
-        pub voting_delay: u64,     // delay before voting starts (in seconds)
-        pub voting_period: u64,    // voting period duration (in seconds)
+        pub voting_delay: u64, // delay before voting starts (in seconds)
+        pub voting_period: u64, // voting period duration (in seconds)
         pub proposal_threshold: u256, // minimum tokens needed to propose
-        pub quorum_percentage: u16,   // quorum percentage (basis points)
-        pub timelock_delay: u64,      // execution delay (in seconds)
-        pub min_proposal_interval: u64, // minimum time between proposals from same user
+        pub quorum_percentage: u16, // quorum percentage (basis points)
+        pub timelock_delay: u64, // execution delay (in seconds)
+        pub min_proposal_interval: u64 // minimum time between proposals from same user
     }
 
     // Proposal states
     pub mod ProposalState {
-        pub const PENDING: u8 = 0;     // proposal created but voting not started
-        pub const ACTIVE: u8 = 1;      // voting is active
-        pub const CANCELED: u8 = 2;    // proposal was canceled
-        pub const DEFEATED: u8 = 3;    // proposal was defeated
-        pub const SUCCEEDED: u8 = 4;   // proposal succeeded but not queued
-        pub const QUEUED: u8 = 5;      // proposal queued for execution
-        pub const EXPIRED: u8 = 6;     // proposal expired without execution
-        pub const EXECUTED: u8 = 7;    // proposal executed
+        pub const PENDING: u8 = 0; // proposal created but voting not started
+        pub const ACTIVE: u8 = 1; // voting is active
+        pub const CANCELED: u8 = 2; // proposal was canceled
+        pub const DEFEATED: u8 = 3; // proposal was defeated
+        pub const SUCCEEDED: u8 = 4; // proposal succeeded but not queued
+        pub const QUEUED: u8 = 5; // proposal queued for execution
+        pub const EXPIRED: u8 = 6; // proposal expired without execution
+        pub const EXECUTED: u8 = 7; // proposal executed
     }
 
     // Vote types

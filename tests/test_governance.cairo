@@ -15,7 +15,7 @@ fn test_proposal_states() {
     assert(ProposalState::EXECUTED == 7_u8, 'Wrong EXECUTED state');
 }
 
-#[test] 
+#[test]
 fn test_vote_types() {
     // Test vote type constants
     assert(VoteType::AGAINST == 0_u8, 'Wrong AGAINST type');
@@ -30,7 +30,7 @@ fn test_array_creation() {
     let values = array![0_u256];
     let empty_calldata: Array<felt252> = array![];
     let calldata = array![empty_calldata.span()];
-    
+
     assert(targets.len() == 1, 'Wrong targets length');
     assert(values.len() == 1, 'Wrong values length');
     assert(calldata.len() == 1, 'Wrong calldata length');
@@ -41,7 +41,7 @@ fn test_governance_types_integration() {
     // Test that our governance types work correctly
     let owner: ContractAddress = contract_address_const::<0x123>();
     let voter: ContractAddress = contract_address_const::<0x456>();
-    
+
     // Test zero address comparison
     let zero_address: ContractAddress = 0.try_into().unwrap();
     assert(zero_address != owner, 'Zero address comparison failed');
@@ -54,8 +54,8 @@ fn test_numeric_constants() {
     let threshold = 1000_u256;
     let percentage = 400_u16; // 4%
     let delay = 86400_u64; // 1 day
-    
+
     assert(threshold == 1000_u256, 'Wrong threshold');
     assert(percentage == 400_u16, 'Wrong percentage');
     assert(delay == 86400_u64, 'Wrong delay');
-} 
+}
