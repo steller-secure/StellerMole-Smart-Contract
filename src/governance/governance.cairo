@@ -337,7 +337,7 @@ pub mod DAOGovernance {
                 };
 
                 // Execute the call
-                if action.value > 0 {// Handle ETH transfer if needed
+                if action.value > 0 { // Handle ETH transfer if needed
                 // Note: StarkNet doesn't have ETH in the same way, this could be token transfer
                 }
 
