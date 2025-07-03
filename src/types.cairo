@@ -100,3 +100,11 @@ pub mod FeeTypes {
     pub const STAKING_FEE: felt252 = 'STAKING_FEE';
     pub const TRANSACTION_FEE: felt252 = 'TRANSACTION_FEE';
 }
+
+// Challenge constants
+pub mod ChallengeConstants {
+    pub const MIN_CHALLENGE_DURATION: u64 = 3600; // 1 hour in seconds
+    pub const MAX_CHALLENGE_DURATION: u64 = 604800; // 1 week in seconds
+    pub const MAX_PARTICIPANTS_DEFAULT: u32 = 1000;
+    pub const CHALLENGE_CREATION_FEE: u256 = 1000000000000000000; // 1 token
+}
