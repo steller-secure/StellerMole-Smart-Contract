@@ -1,6 +1,6 @@
 #[starknet::contract]
 pub mod Leaderboard {
-    use starkmole::interfaces::ILeaderboard;
+    use starkmole::interfaces::leaderboard::ILeaderboard;
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, Map};
     use core::num::traits::Zero;

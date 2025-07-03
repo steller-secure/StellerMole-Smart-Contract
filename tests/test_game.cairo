@@ -2,7 +2,7 @@ use snforge_std::{
     ContractClassTrait, DeclareResultTrait, declare, start_cheat_block_timestamp,
     start_cheat_caller_address, stop_cheat_block_timestamp, stop_cheat_caller_address,
 };
-use starkmole::interfaces::{IStarkMoleGameDispatcher, IStarkMoleGameDispatcherTrait};
+use starkmole::interfaces::game::{IStarkMoleGameDispatcher, IStarkMoleGameDispatcherTrait};
 use starknet::{ContractAddress, contract_address_const};
 
 fn deploy_game_contract() -> (IStarkMoleGameDispatcher, ContractAddress) {

@@ -2,7 +2,7 @@ use snforge_std::{
     ContractClassTrait, DeclareResultTrait, declare, start_cheat_caller_address,
     stop_cheat_caller_address,
 };
-use starkmole::interfaces::{ILeaderboardDispatcher, ILeaderboardDispatcherTrait};
+use starkmole::interfaces::leaderboard::{ILeaderboardDispatcher, ILeaderboardDispatcherTrait};
 use starknet::{ContractAddress, contract_address_const};
 
 fn deploy_leaderboard_contract() -> (ILeaderboardDispatcher, ContractAddress) {

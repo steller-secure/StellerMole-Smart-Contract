@@ -1,6 +1,6 @@
 #[starknet::contract]
 pub mod StarkMoleGame {
-    use starkmole::interfaces::IStarkMoleGame;
+    use starkmole::interfaces::game::IStarkMoleGame;
     use starkmole::utils::{calculate_score_multiplier, get_pseudo_random, is_valid_mole_position};
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
     use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, Map};
@@ -145,8 +145,9 @@ pub mod StarkMoleGame {
 
                 // Generate new mole position
                 game
-                    .current_mole_position =
-                        get_pseudo_random(game_id + current_time, 9).try_into().unwrap();
+                    .current_mole_position = get_pseudo_random(game_id + current_time, 9)
+                    .try_into()
+                    .unwrap();
 
                 self
                     .emit(

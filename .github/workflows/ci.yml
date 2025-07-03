@@ -7,8 +7,8 @@ on:
     branches: [ main ]
 
 env:
-  SCARB_VERSION: "2.6.3"
-  SNFOUNDRY_VERSION: "0.30.0"
+  SCARB_VERSION: "2.9.4"
+  SNFOUNDRY_VERSION: "0.40.0"
 
 jobs:
   lint-and-format:
@@ -50,7 +50,7 @@ jobs:
         run: snforge test
 
       - name: Generate test report
-        run: snforge test --json > test-results.json
+        run: snforge test -- --json > test-results.json
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
