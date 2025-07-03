@@ -10,6 +10,9 @@ pub mod interfaces {
 pub mod leaderboard {
     pub mod leaderboard;
 }
+pub mod mocks {
+    pub mod mock_erc20;
+}
 pub mod rewards {
     pub mod rewards;
 }
