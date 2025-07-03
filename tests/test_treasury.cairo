@@ -1,6 +1,6 @@
 use snforge_std::{
     ContractClassTrait, DeclareResultTrait, declare, start_cheat_caller_address,
-    stop_cheat_caller_address, start_cheat_block_timestamp, stop_cheat_block_timestamp,
+    stop_cheat_caller_address
 };
 use starkmole::interfaces::treasury::{
     ITreasuryDispatcher, ITreasuryDispatcherTrait
@@ -18,8 +18,7 @@ trait IMockERC20<TContractState> {
 // Mock ERC20 token for testing
 fn deploy_mock_token() -> (IERC20Dispatcher, IMockERC20Dispatcher, ContractAddress) {
     let contract = declare("MockERC20").unwrap().contract_class();
-    let initial_supply = 1000000000000000000000000_u256; // 1M tokens
-    let (contract_address, _) = contract.deploy(@array![initial_supply.try_into().unwrap()]).unwrap();
+    let (contract_address, _) = contract.deploy(@array![]).unwrap();
     (
         IERC20Dispatcher { contract_address }, 
         IMockERC20Dispatcher { contract_address },
