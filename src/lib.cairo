@@ -1,11 +1,20 @@
 pub mod game {
     pub mod game;
 }
-pub mod interfaces;
+pub mod interfaces {
+    pub mod game;
+    pub mod leaderboard;
+    pub mod rewards;
+    pub mod treasury;
+}
 pub mod leaderboard {
     pub mod leaderboard;
 }
 pub mod rewards {
     pub mod rewards;
 }
+pub mod treasury {
+    pub mod treasury;
+}
+pub mod types;
 pub mod utils;

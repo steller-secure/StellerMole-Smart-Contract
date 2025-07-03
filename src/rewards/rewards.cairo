@@ -1,6 +1,8 @@
 #[starknet::contract]
 pub mod Rewards {
-    use starkmole::interfaces::{IRewards, ILeaderboardDispatcher, ILeaderboardDispatcherTrait, RewardTier, ChallengeCycle};
+    use starkmole::interfaces::rewards::{IRewards};
+    use starkmole::interfaces::leaderboard::{ILeaderboardDispatcher, ILeaderboardDispatcherTrait};
+    use starkmole::types::{RewardTier, ChallengeCycle};
     use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, Map};
     use openzeppelin::token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};

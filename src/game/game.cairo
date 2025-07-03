@@ -1,6 +1,6 @@
 #[starknet::contract]
 pub mod StarkMoleGame {
-    use starkmole::interfaces::IStarkMoleGame;
+    use starkmole::interfaces::game::IStarkMoleGame;
     use starkmole::utils::{calculate_score_multiplier, get_pseudo_random, is_valid_mole_position};
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
     use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, Map};
