@@ -9,4 +9,4 @@ pub trait ILeaderboard<TContractState> {
     fn get_season_winner(self: @TContractState, season: u32) -> ContractAddress;
     fn get_total_players(self: @TContractState) -> u32;
     fn get_player_score(self: @TContractState, player: ContractAddress) -> u64;
-} 
+}

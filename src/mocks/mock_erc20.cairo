@@ -27,8 +27,9 @@ pub mod MockERC20 {
         let name = "MockToken";
         let symbol = "MOCK";
         let recipient = starknet::get_caller_address();
-        let initial_supply: u256 = 1000000_u256 * 1000000000000000000_u256; // 1M tokens with 18 decimals
-        
+        let initial_supply: u256 = 1000000_u256
+            * 1000000000000000000_u256; // 1M tokens with 18 decimals
+
         self.erc20.initializer(name, symbol);
         self.erc20.mint(recipient, initial_supply);
     }

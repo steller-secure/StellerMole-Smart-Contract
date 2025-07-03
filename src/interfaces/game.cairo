@@ -17,4 +17,4 @@ pub trait IStarkMole<TContractState> {
     fn submit_score(ref self: TContractState, score: u128);
     fn claim_reward(ref self: TContractState);
     fn get_leaderboard(self: @TContractState) -> (ContractAddress, u128, u64);
-} 
+}

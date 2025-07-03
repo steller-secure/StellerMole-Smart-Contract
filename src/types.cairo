@@ -7,7 +7,7 @@ pub struct RewardTier {
     pub min_rank: u32,
     pub max_rank: u32,
     pub reward_amount: u256,
-    pub percentage_of_pool: u16, // out of 10000 (basis points)
+    pub percentage_of_pool: u16 // out of 10000 (basis points)
 }
 
 // Challenge cycle information
@@ -35,7 +35,7 @@ pub struct FeeCollection {
 #[derive(Drop, Serde, starknet::Store, Copy)]
 pub struct FeeDistribution {
     pub pool_type: felt252,
-    pub percentage_bps: u16, // basis points (1/10000)
+    pub percentage_bps: u16 // basis points (1/10000)
 }
 
 // Pool information
@@ -99,4 +99,4 @@ pub mod FeeTypes {
     pub const BRIDGE_FEE: felt252 = 'BRIDGE_FEE';
     pub const STAKING_FEE: felt252 = 'STAKING_FEE';
     pub const TRANSACTION_FEE: felt252 = 'TRANSACTION_FEE';
-} 
+}

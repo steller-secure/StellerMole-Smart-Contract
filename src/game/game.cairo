@@ -145,8 +145,9 @@ pub mod StarkMoleGame {
 
                 // Generate new mole position
                 game
-                    .current_mole_position =
-                        get_pseudo_random(game_id + current_time, 9).try_into().unwrap();
+                    .current_mole_position = get_pseudo_random(game_id + current_time, 9)
+                    .try_into()
+                    .unwrap();
 
                 self
                     .emit(

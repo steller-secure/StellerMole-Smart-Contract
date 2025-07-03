@@ -10,7 +10,9 @@ pub trait IRewards<TContractState> {
     fn has_claimed_reward(self: @TContractState, player: ContractAddress, cycle_id: u32) -> bool;
 
     // Challenge cycle management
-    fn create_challenge_cycle(ref self: TContractState, start_time: u64, end_time: u64, total_pool: u256) -> u32;
+    fn create_challenge_cycle(
+        ref self: TContractState, start_time: u64, end_time: u64, total_pool: u256,
+    ) -> u32;
     fn finalize_challenge_cycle(ref self: TContractState, cycle_id: u32);
     fn get_challenge_cycle(self: @TContractState, cycle_id: u32) -> ChallengeCycle;
     fn get_current_cycle(self: @TContractState) -> u32;
@@ -18,7 +20,9 @@ pub trait IRewards<TContractState> {
     // Reward tier management
     fn set_reward_tiers(ref self: TContractState, tiers: Array<RewardTier>);
     fn get_reward_tiers(self: @TContractState) -> Array<RewardTier>;
-    fn calculate_tier_rewards(self: @TContractState, cycle_id: u32, player: ContractAddress) -> u256;
+    fn calculate_tier_rewards(
+        self: @TContractState, cycle_id: u32, player: ContractAddress,
+    ) -> u256;
 
     // Admin functions
     fn set_token_address(ref self: TContractState, token_address: ContractAddress);
@@ -27,5 +31,7 @@ pub trait IRewards<TContractState> {
 
     // View functions
     fn get_total_rewards_distributed(self: @TContractState) -> u256;
-    fn get_cycle_statistics(self: @TContractState, cycle_id: u32) -> (u32, u256, u32); // participants, total_pool, claims_made
-} 
+    fn get_cycle_statistics(
+        self: @TContractState, cycle_id: u32,
+    ) -> (u32, u256, u32); // participants, total_pool, claims_made
+}

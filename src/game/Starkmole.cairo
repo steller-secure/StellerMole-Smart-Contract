@@ -38,7 +38,9 @@ mod StarkMole {
         assert(!players::contains(caller), 'Player already registered');
 
         let now = get_block_timestamp();
-        let epoch = MoleUtils::get_current_epoch(now, challenge_start_time::read(), challenge_duration::read());
+        let epoch = MoleUtils::get_current_epoch(
+            now, challenge_start_time::read(), challenge_duration::read(),
+        );
 
         let player = Player { score: 0, last_active_epoch: epoch, reward_claimed: false };
         players::write(caller, player);
@@ -50,7 +52,9 @@ mod StarkMole {
         assert(players::contains(caller), 'Not registered');
 
         let now = get_block_timestamp();
-        let epoch = MoleUtils::get_current_epoch(now, challenge_start_time::read(), challenge_duration::read());
+        let epoch = MoleUtils::get_current_epoch(
+            now, challenge_start_time::read(), challenge_duration::read(),
+        );
 
         let mut player = players::read(caller);
         assert(player.last_active_epoch < epoch, 'Score already submitted for this epoch');
@@ -73,7 +77,9 @@ mod StarkMole {
     fn claim_reward() {
         let caller = get_caller_address();
         let now = get_block_timestamp();
-        let epoch = MoleUtils::get_current_epoch(now, challenge_start_time::read(), challenge_duration::read());
+        let epoch = MoleUtils::get_current_epoch(
+            now, challenge_start_time::read(), challenge_duration::read(),
+        );
 
         let mut player = players::read(caller);
         let challenge = current_challenge::read();
@@ -84,7 +90,6 @@ mod StarkMole {
 
         player.reward_claimed = true;
         players::write(caller, player);
-
         // Transfer logic or emit event here
     }
 
