@@ -51,12 +51,12 @@ pub trait IRewards<TContractState> {
 }
 
 // Public interface combining lightweight game access
-#[interface]
-pub trait IStarkMole {
-    fn register();
-    fn submit_score(score: u128);
-    fn claim_reward();
-    fn get_leaderboard() -> (ContractAddress, u128, u64);
+#[starknet::interface]
+pub trait IStarkMole<TContractState> {
+    fn register(ref self: TContractState);
+    fn submit_score(ref self: TContractState, score: u128);
+    fn claim_reward(ref self: TContractState);
+    fn get_leaderboard(self: @TContractState) -> (ContractAddress, u128, u64);
 }
 
 // Reward tier structure
