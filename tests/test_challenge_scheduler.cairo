@@ -1,20 +1,15 @@
 use starknet::{ContractAddress, contract_address_const};
 use snforge_std::{
     declare, ContractClassTrait, DeclareResultTrait, spy_events, EventSpyAssertionsTrait,
-    start_cheat_caller_address, stop_cheat_caller_address, start_cheat_block_timestamp
+    start_cheat_caller_address, stop_cheat_caller_address, start_cheat_block_timestamp,
 };
 
 use starkmole::interfaces::challenge::{
-    IChallengeSchedulerDispatcher, IChallengeSchedulerDispatcherTrait
+    IChallengeSchedulerDispatcher, IChallengeSchedulerDispatcherTrait,
 };
 use starkmole::challenge::challenge_scheduler::ChallengeScheduler::{
-    Event as ChallengeEvents,
-    ChallengeCreated,
-    ParticipantJoined,
-    ScoreSubmitted,
-    ChallengeCancelled,
-    ParticipantLeft,
-    ContractUpdated
+    Event as ChallengeEvents, ChallengeCreated, ParticipantJoined, ScoreSubmitted,
+    ChallengeCancelled, ParticipantLeft, ContractUpdated,
 };
 
 // Helper functions
@@ -40,11 +35,9 @@ fn leaderboard_contract() -> ContractAddress {
 
 fn deploy_challenge_scheduler() -> (IChallengeSchedulerDispatcher, ContractAddress) {
     let contract = declare("ChallengeScheduler").unwrap().contract_class();
-    
+
     let constructor_calldata = array![
-        owner().into(),
-        game_contract().into(),
-        leaderboard_contract().into()
+        owner().into(), game_contract().into(), leaderboard_contract().into(),
     ];
 
     let (contract_address, _) = contract.deploy(@constructor_calldata).unwrap();
@@ -63,7 +56,7 @@ const MAX_PARTICIPANTS: u32 = 100;
 #[test]
 fn test_constructor() {
     let (challenge_scheduler, _) = deploy_challenge_scheduler();
-    
+
     assert_eq!(challenge_scheduler.get_owner(), owner());
     assert_eq!(challenge_scheduler.get_next_challenge_id(), 1);
 }
@@ -74,12 +67,8 @@ fn test_create_daily_challenge() {
     start_cheat_caller_address(contract_address, owner());
     let mut spy = spy_events();
 
-    let challenge_id = challenge_scheduler.create_challenge(
-        DAILY_CHALLENGE,
-        START_TIME,
-        END_TIME,
-        MAX_PARTICIPANTS
-    );
+    let challenge_id = challenge_scheduler
+        .create_challenge(DAILY_CHALLENGE, START_TIME, END_TIME, MAX_PARTICIPANTS);
 
     assert_eq!(challenge_id, 1);
     assert_eq!(challenge_scheduler.get_next_challenge_id(), 2);
@@ -100,7 +89,7 @@ fn test_create_daily_challenge() {
             end_time: END_TIME,
             max_participants: MAX_PARTICIPANTS,
             creator: owner(),
-        }
+        },
     );
     spy.assert_emitted(@array![(contract_address, expected_event)]);
 }
@@ -110,12 +99,8 @@ fn test_create_weekly_challenge() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
     start_cheat_caller_address(contract_address, owner());
 
-    let challenge_id = challenge_scheduler.create_challenge(
-        WEEKLY_CHALLENGE,
-        START_TIME,
-        END_TIME,
-        MAX_PARTICIPANTS
-    );
+    let challenge_id = challenge_scheduler
+        .create_challenge(WEEKLY_CHALLENGE, START_TIME, END_TIME, MAX_PARTICIPANTS);
 
     let challenge = challenge_scheduler.get_challenge(challenge_id);
     assert_eq!(challenge.challenge_type, WEEKLY_CHALLENGE);
@@ -127,12 +112,7 @@ fn test_create_challenge_not_owner() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
     start_cheat_caller_address(contract_address, player1());
 
-    challenge_scheduler.create_challenge(
-        DAILY_CHALLENGE,
-        START_TIME,
-        END_TIME,
-        MAX_PARTICIPANTS
-    );
+    challenge_scheduler.create_challenge(DAILY_CHALLENGE, START_TIME, END_TIME, MAX_PARTICIPANTS);
 }
 
 #[test]
@@ -141,12 +121,7 @@ fn test_create_challenge_invalid_type() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
     start_cheat_caller_address(contract_address, owner());
 
-    challenge_scheduler.create_challenge(
-        'invalid',
-        START_TIME,
-        END_TIME,
-        MAX_PARTICIPANTS
-    );
+    challenge_scheduler.create_challenge('invalid', START_TIME, END_TIME, MAX_PARTICIPANTS);
 }
 
 #[test]
@@ -155,12 +130,11 @@ fn test_create_challenge_invalid_times() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
     start_cheat_caller_address(contract_address, owner());
 
-    challenge_scheduler.create_challenge(
-        DAILY_CHALLENGE,
-        END_TIME,
-        START_TIME, // End time before start time
-        MAX_PARTICIPANTS
-    );
+    challenge_scheduler
+        .create_challenge(
+            DAILY_CHALLENGE, END_TIME, START_TIME, // End time before start time
+            MAX_PARTICIPANTS,
+        );
 }
 
 #[test]
@@ -169,26 +143,19 @@ fn test_create_challenge_zero_participants() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
     start_cheat_caller_address(contract_address, owner());
 
-    challenge_scheduler.create_challenge(
-        DAILY_CHALLENGE,
-        START_TIME,
-        END_TIME,
-        0 // Zero max participants
-    );
+    challenge_scheduler
+        .create_challenge(DAILY_CHALLENGE, START_TIME, END_TIME, 0 // Zero max participants
+        );
 }
 
 #[test]
 fn test_join_challenge() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
-    
+
     // Create challenge as owner
     start_cheat_caller_address(contract_address, owner());
-    let challenge_id = challenge_scheduler.create_challenge(
-        DAILY_CHALLENGE,
-        START_TIME,
-        END_TIME,
-        MAX_PARTICIPANTS
-    );
+    let challenge_id = challenge_scheduler
+        .create_challenge(DAILY_CHALLENGE, START_TIME, END_TIME, MAX_PARTICIPANTS);
     stop_cheat_caller_address(contract_address);
 
     // Set time within challenge window
@@ -200,16 +167,12 @@ fn test_join_challenge() {
 
     // Verify participant joined
     assert!(challenge_scheduler.is_participant(challenge_id, player1()));
-    
+
     let updated_challenge = challenge_scheduler.get_challenge(challenge_id);
     assert_eq!(updated_challenge.participant_count, 1);
 
     let expected_event = ChallengeEvents::ParticipantJoined(
-        ParticipantJoined {
-            challenge_id,
-            participant: player1(),
-            joined_at: START_TIME + 100,
-        }
+        ParticipantJoined { challenge_id, participant: player1(), joined_at: START_TIME + 100 },
     );
     spy.assert_emitted(@array![(contract_address, expected_event)]);
 }
@@ -227,15 +190,11 @@ fn test_join_nonexistent_challenge() {
 #[should_panic(expected: "Challenge is not in valid time window")]
 fn test_join_challenge_outside_time_window() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
-    
+
     // Create challenge as owner
     start_cheat_caller_address(contract_address, owner());
-    let challenge_id = challenge_scheduler.create_challenge(
-        DAILY_CHALLENGE,
-        START_TIME,
-        END_TIME,
-        MAX_PARTICIPANTS
-    );
+    let challenge_id = challenge_scheduler
+        .create_challenge(DAILY_CHALLENGE, START_TIME, END_TIME, MAX_PARTICIPANTS);
     stop_cheat_caller_address(contract_address);
 
     // Set time before challenge start
@@ -249,15 +208,11 @@ fn test_join_challenge_outside_time_window() {
 #[should_panic(expected: "Already participating in challenge")]
 fn test_join_challenge_twice() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
-    
+
     // Create challenge as owner
     start_cheat_caller_address(contract_address, owner());
-    let challenge_id = challenge_scheduler.create_challenge(
-        DAILY_CHALLENGE,
-        START_TIME,
-        END_TIME,
-        MAX_PARTICIPANTS
-    );
+    let challenge_id = challenge_scheduler
+        .create_challenge(DAILY_CHALLENGE, START_TIME, END_TIME, MAX_PARTICIPANTS);
     stop_cheat_caller_address(contract_address);
 
     // Set time within challenge window
@@ -271,15 +226,11 @@ fn test_join_challenge_twice() {
 #[test]
 fn test_leave_challenge() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
-    
+
     // Create challenge and join
     start_cheat_caller_address(contract_address, owner());
-    let challenge_id = challenge_scheduler.create_challenge(
-        DAILY_CHALLENGE,
-        START_TIME,
-        END_TIME,
-        MAX_PARTICIPANTS
-    );
+    let challenge_id = challenge_scheduler
+        .create_challenge(DAILY_CHALLENGE, START_TIME, END_TIME, MAX_PARTICIPANTS);
     stop_cheat_caller_address(contract_address);
 
     start_cheat_block_timestamp(contract_address, START_TIME + 100);
@@ -291,15 +242,12 @@ fn test_leave_challenge() {
 
     // Verify participant left
     assert!(!challenge_scheduler.is_participant(challenge_id, player1()));
-    
+
     let updated_challenge = challenge_scheduler.get_challenge(challenge_id);
     assert_eq!(updated_challenge.participant_count, 0);
 
     let expected_event = ChallengeEvents::ParticipantLeft(
-        ParticipantLeft {
-            challenge_id,
-            participant: player1(),
-        }
+        ParticipantLeft { challenge_id, participant: player1() },
     );
     spy.assert_emitted(@array![(contract_address, expected_event)]);
 }
@@ -307,15 +255,11 @@ fn test_leave_challenge() {
 #[test]
 fn test_submit_score() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
-    
+
     // Create challenge and join
     start_cheat_caller_address(contract_address, owner());
-    let challenge_id = challenge_scheduler.create_challenge(
-        DAILY_CHALLENGE,
-        START_TIME,
-        END_TIME,
-        MAX_PARTICIPANTS
-    );
+    let challenge_id = challenge_scheduler
+        .create_challenge(DAILY_CHALLENGE, START_TIME, END_TIME, MAX_PARTICIPANTS);
     stop_cheat_caller_address(contract_address);
 
     start_cheat_block_timestamp(contract_address, START_TIME + 100);
@@ -330,11 +274,7 @@ fn test_submit_score() {
     assert_eq!(challenge_scheduler.get_participant_score(challenge_id, player1()), score);
 
     let expected_event = ChallengeEvents::ScoreSubmitted(
-        ScoreSubmitted {
-            challenge_id,
-            participant: player1(),
-            score,
-        }
+        ScoreSubmitted { challenge_id, participant: player1(), score },
     );
     spy.assert_emitted(@array![(contract_address, expected_event)]);
 }
@@ -343,14 +283,10 @@ fn test_submit_score() {
 #[should_panic(expected: "Not participating in challenge")]
 fn test_submit_score_not_participant() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
-    
+
     start_cheat_caller_address(contract_address, owner());
-    let challenge_id = challenge_scheduler.create_challenge(
-        DAILY_CHALLENGE,
-        START_TIME,
-        END_TIME,
-        MAX_PARTICIPANTS
-    );
+    let challenge_id = challenge_scheduler
+        .create_challenge(DAILY_CHALLENGE, START_TIME, END_TIME, MAX_PARTICIPANTS);
     stop_cheat_caller_address(contract_address);
 
     start_cheat_block_timestamp(contract_address, START_TIME + 100);
@@ -362,14 +298,10 @@ fn test_submit_score_not_participant() {
 #[test]
 fn test_cancel_challenge() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
-    
+
     start_cheat_caller_address(contract_address, owner());
-    let challenge_id = challenge_scheduler.create_challenge(
-        DAILY_CHALLENGE,
-        START_TIME,
-        END_TIME,
-        MAX_PARTICIPANTS
-    );
+    let challenge_id = challenge_scheduler
+        .create_challenge(DAILY_CHALLENGE, START_TIME, END_TIME, MAX_PARTICIPANTS);
 
     let mut spy = spy_events();
     challenge_scheduler.cancel_challenge(challenge_id);
@@ -378,10 +310,7 @@ fn test_cancel_challenge() {
     assert!(!challenge.is_active);
 
     let expected_event = ChallengeEvents::ChallengeCancelled(
-        ChallengeCancelled {
-            challenge_id,
-            cancelled_by: owner(),
-        }
+        ChallengeCancelled { challenge_id, cancelled_by: owner() },
     );
     spy.assert_emitted(@array![(contract_address, expected_event)]);
 }
@@ -389,20 +318,16 @@ fn test_cancel_challenge() {
 #[test]
 fn test_get_challenge_participants() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
-    
+
     // Create challenge
     start_cheat_caller_address(contract_address, owner());
-    let challenge_id = challenge_scheduler.create_challenge(
-        DAILY_CHALLENGE,
-        START_TIME,
-        END_TIME,
-        MAX_PARTICIPANTS
-    );
+    let challenge_id = challenge_scheduler
+        .create_challenge(DAILY_CHALLENGE, START_TIME, END_TIME, MAX_PARTICIPANTS);
     stop_cheat_caller_address(contract_address);
 
     // Join with multiple players
     start_cheat_block_timestamp(contract_address, START_TIME + 100);
-    
+
     start_cheat_caller_address(contract_address, player1());
     challenge_scheduler.join_challenge(challenge_id);
     stop_cheat_caller_address(contract_address);
@@ -418,14 +343,10 @@ fn test_get_challenge_participants() {
 #[test]
 fn test_is_challenge_active() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
-    
+
     start_cheat_caller_address(contract_address, owner());
-    let challenge_id = challenge_scheduler.create_challenge(
-        DAILY_CHALLENGE,
-        START_TIME,
-        END_TIME,
-        MAX_PARTICIPANTS
-    );
+    let challenge_id = challenge_scheduler
+        .create_challenge(DAILY_CHALLENGE, START_TIME, END_TIME, MAX_PARTICIPANTS);
 
     // Before start time
     start_cheat_block_timestamp(contract_address, START_TIME - 100);
@@ -443,27 +364,19 @@ fn test_is_challenge_active() {
 #[test]
 fn test_get_active_challenges() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
-    
+
     start_cheat_caller_address(contract_address, owner());
-    
+
     // Create multiple challenges
-    let _challenge_id_1 = challenge_scheduler.create_challenge(
-        DAILY_CHALLENGE,
-        START_TIME,
-        END_TIME,
-        MAX_PARTICIPANTS
-    );
-    
-    let _challenge_id_2 = challenge_scheduler.create_challenge(
-        WEEKLY_CHALLENGE,
-        START_TIME + 1000,
-        END_TIME + 1000,
-        MAX_PARTICIPANTS
-    );
+    let _challenge_id_1 = challenge_scheduler
+        .create_challenge(DAILY_CHALLENGE, START_TIME, END_TIME, MAX_PARTICIPANTS);
+
+    let _challenge_id_2 = challenge_scheduler
+        .create_challenge(WEEKLY_CHALLENGE, START_TIME + 1000, END_TIME + 1000, MAX_PARTICIPANTS);
 
     // Set time when both are active
     start_cheat_block_timestamp(contract_address, START_TIME + 1500);
-    
+
     let active_challenges = challenge_scheduler.get_active_challenges();
     assert_eq!(active_challenges.len(), 2);
 }
@@ -471,13 +384,15 @@ fn test_get_active_challenges() {
 #[test]
 fn test_get_historical_challenges() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
-    
+
     start_cheat_caller_address(contract_address, owner());
-    
+
     // Create multiple challenges
     challenge_scheduler.create_challenge(DAILY_CHALLENGE, START_TIME, END_TIME, MAX_PARTICIPANTS);
-    challenge_scheduler.create_challenge(WEEKLY_CHALLENGE, START_TIME + 1000, END_TIME + 1000, MAX_PARTICIPANTS);
-    challenge_scheduler.create_challenge(DAILY_CHALLENGE, START_TIME + 2000, END_TIME + 2000, MAX_PARTICIPANTS);
+    challenge_scheduler
+        .create_challenge(WEEKLY_CHALLENGE, START_TIME + 1000, END_TIME + 1000, MAX_PARTICIPANTS);
+    challenge_scheduler
+        .create_challenge(DAILY_CHALLENGE, START_TIME + 2000, END_TIME + 2000, MAX_PARTICIPANTS);
 
     let historical = challenge_scheduler.get_historical_challenges(0, 2);
     assert_eq!(historical.len(), 2);
@@ -490,17 +405,14 @@ fn test_get_historical_challenges() {
 fn test_set_game_contract() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
     let new_game_contract = contract_address_const::<'new_game_contract'>();
-    
+
     start_cheat_caller_address(contract_address, owner());
     let mut spy = spy_events();
 
     challenge_scheduler.set_game_contract(new_game_contract);
 
     let expected_event = ChallengeEvents::ContractUpdated(
-        ContractUpdated {
-            contract_type: 'game',
-            new_address: new_game_contract,
-        }
+        ContractUpdated { contract_type: 'game', new_address: new_game_contract },
     );
     spy.assert_emitted(@array![(contract_address, expected_event)]);
 }
@@ -509,17 +421,14 @@ fn test_set_game_contract() {
 fn test_set_leaderboard_contract() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
     let new_leaderboard_contract = contract_address_const::<'new_leaderboard_contract'>();
-    
+
     start_cheat_caller_address(contract_address, owner());
     let mut spy = spy_events();
 
     challenge_scheduler.set_leaderboard_contract(new_leaderboard_contract);
 
     let expected_event = ChallengeEvents::ContractUpdated(
-        ContractUpdated {
-            contract_type: 'leaderboard',
-            new_address: new_leaderboard_contract,
-        }
+        ContractUpdated { contract_type: 'leaderboard', new_address: new_leaderboard_contract },
     );
     spy.assert_emitted(@array![(contract_address, expected_event)]);
 }
@@ -529,7 +438,7 @@ fn test_set_leaderboard_contract() {
 fn test_set_game_contract_not_owner() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
     let new_game_contract = contract_address_const::<'new_game_contract'>();
-    
+
     start_cheat_caller_address(contract_address, player1());
     challenge_scheduler.set_game_contract(new_game_contract);
 }
@@ -538,7 +447,7 @@ fn test_set_game_contract_not_owner() {
 fn test_get_current_time() {
     let (challenge_scheduler, contract_address) = deploy_challenge_scheduler();
     let test_time = 12345_u64;
-    
+
     start_cheat_block_timestamp(contract_address, test_time);
     assert_eq!(challenge_scheduler.get_current_time(), test_time);
-} 
+}
