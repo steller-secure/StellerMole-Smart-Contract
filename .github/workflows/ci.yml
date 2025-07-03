@@ -50,7 +50,7 @@ jobs:
         run: snforge test
 
       - name: Generate test report
-        run: snforge test --json > test-results.json
+        run: snforge test -- --json > test-results.json
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
