@@ -1,4 +1,4 @@
-use starknet::{get_block_timestamp};
+use starknet::get_block_timestamp;
 
 // Returns a pseudo-random number based on the current block timestamp and a seed
 pub fn get_pseudo_random(seed: u64, max_value: u64) -> u64 {

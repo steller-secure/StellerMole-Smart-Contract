@@ -2,10 +2,9 @@ use snforge_std::{
     ContractClassTrait, DeclareResultTrait, declare, start_cheat_caller_address,
     stop_cheat_caller_address, start_cheat_block_timestamp, stop_cheat_block_timestamp,
 };
-use starkmole::interfaces::{
-    IRewardsDispatcher, IRewardsDispatcherTrait, ILeaderboardDispatcher, ILeaderboardDispatcherTrait,
-    RewardTier
-};
+use starkmole::interfaces::leaderboard::{ILeaderboardDispatcher, ILeaderboardDispatcherTrait};
+use starkmole::interfaces::rewards::{IRewardsDispatcher, IRewardsDispatcherTrait};
+use starkmole::types::RewardTier;
 use starknet::{ContractAddress, contract_address_const};
 
 // Helper function to deploy leaderboard contract
