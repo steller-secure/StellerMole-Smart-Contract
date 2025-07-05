@@ -1,8 +1,13 @@
 pub mod game {
     pub mod game;
 }
+pub mod governance {
+    pub mod governance;
+}
+
 pub mod interfaces {
     pub mod game;
+    pub mod governance;
     pub mod leaderboard;
     pub mod rewards;
     pub mod treasury;
