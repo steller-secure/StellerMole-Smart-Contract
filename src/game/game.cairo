@@ -1,9 +1,11 @@
 #[starknet::contract]
 pub mod StarkMoleGame {
     use starkmole::interfaces::game::IStarkMoleGame;
+    use starkmole::interfaces::referral::{IReferralDispatcher, IReferralDispatcherTrait};
     use starkmole::utils::{calculate_score_multiplier, get_pseudo_random, is_valid_mole_position};
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
     use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, Map};
+    use core::num::traits::Zero;
 
     #[storage]
     struct Storage {
@@ -14,6 +16,7 @@ pub mod StarkMoleGame {
         game_duration: u64,
         hit_cooldown: u64,
         owner: ContractAddress,
+        referral_contract: ContractAddress,
     }
 
     #[derive(Drop, Serde, starknet::Store, Clone)]
@@ -178,6 +181,7 @@ pub mod StarkMoleGame {
 
             // Update player stats
             let mut stats = self.player_stats.read(caller);
+            let is_first_game = stats.total_games == 0;
             stats.total_games += 1;
             stats.total_score += final_score;
             if final_score > stats.best_score {
@@ -186,6 +190,17 @@ pub mod StarkMoleGame {
 
             self.games.write(game_id, game.clone());
             self.player_stats.write(caller, stats);
+
+            // Trigger referral rewards if this is the first completed game
+            if is_first_game {
+                let referral_contract_addr = self.referral_contract.read();
+                if !referral_contract_addr.is_zero() {
+                    let referral_contract = IReferralDispatcher { contract_address: referral_contract_addr };
+                    // Call complete_referral with the player and their final score
+                    // This will trigger rewards if the player was referred and meets minimum score
+                    referral_contract.complete_referral(caller, final_score);
+                }
+            }
 
             self.emit(GameEnded { game_id, player: caller, final_score, total_hits: game.hits });
 
@@ -200,6 +215,12 @@ pub mod StarkMoleGame {
         fn get_player_stats(self: @ContractState, player: ContractAddress) -> (u64, u64, u64) {
             let stats = self.player_stats.read(player);
             (stats.total_games, stats.total_score, stats.best_score)
+        }
+
+        fn set_referral_contract(ref self: ContractState, referral_contract: ContractAddress) {
+            let caller = get_caller_address();
+            assert(caller == self.owner.read(), 'Only owner can set referral');
+            self.referral_contract.write(referral_contract);
         }
     }
 }
