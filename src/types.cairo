@@ -194,7 +194,7 @@ pub struct ReferralCode {
     pub is_active: bool,
     pub max_uses: u32,
     pub current_uses: u32,
-    pub expiry_time: u64, // 0 means no expiry
+    pub expiry_time: u64 // 0 means no expiry
 }
 
 // Referral relationship between referrer and referee

@@ -1,8 +1,6 @@
 #[starknet::contract]
 pub mod Referral {
-    use starknet::{
-        ContractAddress, get_caller_address, get_block_timestamp, get_tx_info
-    };
+    use starknet::{ContractAddress, get_caller_address, get_block_timestamp, get_tx_info};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, Map};
     use openzeppelin::access::ownable::OwnableComponent;
     use openzeppelin::security::reentrancyguard::ReentrancyGuardComponent;
@@ -13,11 +11,13 @@ pub mod Referral {
     use starkmole::interfaces::treasury::{ITreasuryDispatcher, ITreasuryDispatcherTrait};
     use starkmole::types::{
         ReferralCode, ReferralRelationship, ReferralStats, ReferralRewardConfig,
-        ReferralRewardClaim, ReferralConstants
+        ReferralRewardClaim, ReferralConstants,
     };
 
     component!(path: OwnableComponent, storage: ownable, event: OwnableEvent);
-    component!(path: ReentrancyGuardComponent, storage: reentrancy_guard, event: ReentrancyGuardEvent);
+    component!(
+        path: ReentrancyGuardComponent, storage: reentrancy_guard, event: ReentrancyGuardEvent,
+    );
 
     #[abi(embed_v0)]
     impl OwnableImpl = OwnableComponent::OwnableImpl<ContractState>;
@@ -31,48 +31,44 @@ pub mod Referral {
         ownable: OwnableComponent::Storage,
         #[substorage(v0)]
         reentrancy_guard: ReentrancyGuardComponent::Storage,
-
         // Referral code management
         referral_codes: Map<felt252, ReferralCode>,
         user_referral_codes: Map<(ContractAddress, u32), felt252>, // (user, index) -> code
         user_referral_codes_count: Map<ContractAddress, u32>,
         code_exists: Map<felt252, bool>,
-
         // Referral relationships
-        referral_relationships: Map<ContractAddress, ReferralRelationship>, // referee -> relationship
-        user_referrals: Map<(ContractAddress, u32), ContractAddress>, // (referrer, index) -> referee
+        referral_relationships: Map<
+            ContractAddress, ReferralRelationship,
+        >, // referee -> relationship
+        user_referrals: Map<
+            (ContractAddress, u32), ContractAddress,
+        >, // (referrer, index) -> referee
         user_referrals_count: Map<ContractAddress, u32>,
         referral_stats: Map<ContractAddress, ReferralStats>,
-
         // Reward management
         reward_config: ReferralRewardConfig,
         reward_claims: Map<u32, ReferralRewardClaim>,
         user_reward_claims: Map<(ContractAddress, u32), u32>, // (user, index) -> claim_id
         user_reward_claims_count: Map<ContractAddress, u32>,
         pending_rewards: Map<ContractAddress, u256>,
-
         // Anti-abuse and security
         banned_users: Map<ContractAddress, bool>,
         last_referral_time: Map<ContractAddress, u64>,
-
         // Contract integrations
         game_contract: ContractAddress,
         treasury_contract: ContractAddress,
         token_contract: ContractAddress,
-
         // System state
         paused: bool,
         total_codes_created: u32,
         total_relationships: u32,
         total_rewards_distributed: u256,
-
         // Counters for unique IDs
         next_claim_id: u32,
-        
         // Leaderboard tracking
         active_referrers: Map<u32, ContractAddress>, // index -> referrer address
         active_referrers_count: u32,
-        referrer_index: Map<ContractAddress, u32>, // referrer -> index in active_referrers
+        referrer_index: Map<ContractAddress, u32> // referrer -> index in active_referrers
     }
 
     #[event]
@@ -82,7 +78,6 @@ pub mod Referral {
         OwnableEvent: OwnableComponent::Event,
         #[flat]
         ReentrancyGuardEvent: ReentrancyGuardComponent::Event,
-
         ReferralCodeCreated: ReferralCodeCreated,
         ReferralCodeDeactivated: ReferralCodeDeactivated,
         ReferralRegistered: ReferralRegistered,
@@ -202,7 +197,7 @@ pub mod Referral {
         self.game_contract.write(game_contract);
         self.treasury_contract.write(treasury_contract);
         self.token_contract.write(token_contract);
-        
+
         // Initialize default reward configuration
         let default_config = ReferralRewardConfig {
             referrer_reward: ReferralConstants::DEFAULT_REFERRER_REWARD,
@@ -212,7 +207,7 @@ pub mod Referral {
             is_active: true,
         };
         self.reward_config.write(default_config);
-        
+
         self.paused.write(false);
         self.next_claim_id.write(1);
         self.total_codes_created.write(0);
@@ -224,13 +219,15 @@ pub mod Referral {
     impl ReferralImpl of IReferral<ContractState> {
         // Referral Code Management
         fn create_referral_code(
-            ref self: ContractState, code: felt252, max_uses: u32, expiry_time: u64
+            ref self: ContractState, code: felt252, max_uses: u32, expiry_time: u64,
         ) -> bool {
             self._assert_not_paused();
             let caller = get_caller_address();
             assert!(!self.banned_users.read(caller), "User is banned");
             assert!(!self.code_exists.read(code), "Code already exists");
-            assert!(max_uses > 0 && max_uses <= ReferralConstants::MAX_CODE_USES, "Invalid max uses");
+            assert!(
+                max_uses > 0 && max_uses <= ReferralConstants::MAX_CODE_USES, "Invalid max uses",
+            );
 
             let current_time = get_block_timestamp();
             let final_expiry = if expiry_time == 0 {
@@ -251,7 +248,7 @@ pub mod Referral {
 
             self.referral_codes.write(code, referral_code);
             self.code_exists.write(code, true);
-            
+
             // Add to user's referral codes list
             let user_codes_count = self.user_referral_codes_count.read(caller);
             self.user_referral_codes.write((caller, user_codes_count), code);
@@ -261,12 +258,12 @@ pub mod Referral {
             let total_codes = self.total_codes_created.read() + 1;
             self.total_codes_created.write(total_codes);
 
-            self.emit(ReferralCodeCreated {
-                code,
-                creator: caller,
-                max_uses,
-                expiry_time: final_expiry,
-            });
+            self
+                .emit(
+                    ReferralCodeCreated {
+                        code, creator: caller, max_uses, expiry_time: final_expiry,
+                    },
+                );
 
             true
         }
@@ -275,30 +272,27 @@ pub mod Referral {
             self._assert_not_paused();
             let caller = get_caller_address();
             let mut referral_code = self.referral_codes.read(code);
-            
+
             // Only owner or code creator can deactivate
             assert!(
                 caller == self.ownable.owner() || caller == referral_code.referrer,
-                "Not authorized to deactivate code"
+                "Not authorized to deactivate code",
             );
             assert!(referral_code.is_active, "Code already inactive");
 
             referral_code.is_active = false;
             self.referral_codes.write(code, referral_code);
 
-            self.emit(ReferralCodeDeactivated {
-                code,
-                deactivator: caller,
-            });
+            self.emit(ReferralCodeDeactivated { code, deactivator: caller });
         }
 
         fn update_referral_code(
-            ref self: ContractState, code: felt252, max_uses: u32, expiry_time: u64
+            ref self: ContractState, code: felt252, max_uses: u32, expiry_time: u64,
         ) {
             self._assert_not_paused();
             let caller = get_caller_address();
             let mut referral_code = self.referral_codes.read(code);
-            
+
             assert!(caller == referral_code.referrer, "Not code owner");
             assert!(referral_code.is_active, "Code is inactive");
             assert!(max_uses >= referral_code.current_uses, "Max uses too low");
@@ -307,7 +301,7 @@ pub mod Referral {
             if expiry_time > 0 {
                 referral_code.expiry_time = expiry_time;
             }
-            
+
             self.referral_codes.write(code, referral_code);
         }
 
@@ -320,16 +314,16 @@ pub mod Referral {
             if !referral_code.is_active {
                 return false;
             }
-            
+
             let current_time = get_block_timestamp();
             if referral_code.expiry_time > 0 && current_time > referral_code.expiry_time {
                 return false;
             }
-            
+
             if referral_code.current_uses >= referral_code.max_uses {
                 return false;
             }
-            
+
             true
         }
 
@@ -343,15 +337,15 @@ pub mod Referral {
 
             let mut code_data = self.referral_codes.read(referral_code);
             let referrer = code_data.referrer;
-            
+
             // Prevent self-referral
             assert!(referrer != caller, "Cannot refer yourself");
-            
+
             // Check cooldown for referrer
             assert!(self.check_referral_cooldown(referrer), "Referrer in cooldown");
 
             let current_time = get_block_timestamp();
-            
+
             // Create referral relationship
             let relationship = ReferralRelationship {
                 referrer,
@@ -361,79 +355,81 @@ pub mod Referral {
                 rewards_claimed: false,
                 first_game_completed: false,
             };
-            
+
             self.referral_relationships.write(caller, relationship);
-            
+
             // Update referrer's referral list
             let referrer_referrals_count = self.user_referrals_count.read(referrer);
             self.user_referrals.write((referrer, referrer_referrals_count), caller);
             self.user_referrals_count.write(referrer, referrer_referrals_count + 1);
-            
+
             // Update referrer stats
             let mut referrer_stats = self.referral_stats.read(referrer);
             referrer_stats.total_referrals += 1;
             referrer_stats.last_referral_time = current_time;
             self.referral_stats.write(referrer, referrer_stats);
-            
+
             // Add referrer to active referrers list for leaderboard tracking
             self._add_to_active_referrers(referrer);
-            
+
             // Update code usage
             code_data.current_uses += 1;
             self.referral_codes.write(referral_code, code_data);
-            
+
             // Update last referral time for cooldown
             self.last_referral_time.write(referrer, current_time);
-            
+
             // Update total relationships counter
             let total_relationships = self.total_relationships.read() + 1;
             self.total_relationships.write(total_relationships);
 
-            self.emit(ReferralRegistered {
-                referrer,
-                referee: caller,
-                referral_code,
-                timestamp: current_time,
-            });
+            self
+                .emit(
+                    ReferralRegistered {
+                        referrer, referee: caller, referral_code, timestamp: current_time,
+                    },
+                );
 
             true
         }
 
         fn complete_referral(
-            ref self: ContractState, referee: ContractAddress, game_score: u64
+            ref self: ContractState, referee: ContractAddress, game_score: u64,
         ) -> bool {
             self._assert_not_paused();
             let caller = get_caller_address();
-            
+
             // Only game contract can call this
-            assert!(caller == self.game_contract.read(), "Only game contract can complete referrals");
-            
+            assert!(
+                caller == self.game_contract.read(), "Only game contract can complete referrals",
+            );
+
             if !self.has_referrer(referee) {
                 return false;
             }
-            
+
             let mut relationship = self.referral_relationships.read(referee);
             if relationship.first_game_completed {
                 return false;
             }
-            
+
             let config = self.reward_config.read();
-            
+
             // Mark as completed
             relationship.first_game_completed = true;
             self.referral_relationships.write(referee, relationship);
-            
+
             // Update referrer stats
             let referrer = relationship.referrer;
             let mut referrer_stats = self.referral_stats.read(referrer);
-            
+
             // Only count as successful and give rewards if score meets minimum and config is active
             let meets_requirements = config.is_active && game_score >= config.min_game_score;
             if meets_requirements {
                 referrer_stats.successful_referrals += 1;
             }
             self.referral_stats.write(referrer, referrer_stats);
-            
+
             // Distribute rewards after delay only if requirements are met
             let current_time = get_block_timestamp();
             if meets_requirements {
@@ -441,30 +437,26 @@ pub mod Referral {
                     self._distribute_referral_rewards_internal(referrer, referee);
                 } else {
                     // Add to pending rewards for later claim
-                    let (referrer_reward, referee_reward) = self.calculate_referral_rewards(referrer, referee);
-                    
+                    let (referrer_reward, referee_reward) = self
+                        .calculate_referral_rewards(referrer, referee);
+
                     let mut referrer_pending = self.pending_rewards.read(referrer);
                     referrer_pending += referrer_reward;
                     self.pending_rewards.write(referrer, referrer_pending);
-                    
+
                     let mut referee_pending = self.pending_rewards.read(referee);
                     referee_pending += referee_reward;
                     self.pending_rewards.write(referee, referee_pending);
                 }
             }
 
-            self.emit(ReferralCompleted {
-                referrer,
-                referee,
-                game_score,
-                timestamp: current_time,
-            });
+            self.emit(ReferralCompleted { referrer, referee, game_score, timestamp: current_time });
 
             true
         }
 
         fn get_user_referral_relationship(
-            self: @ContractState, referee: ContractAddress
+            self: @ContractState, referee: ContractAddress,
         ) -> ReferralRelationship {
             self.referral_relationships.read(referee)
         }
@@ -498,9 +490,7 @@ pub mod Referral {
             self.pending_rewards.read(user)
         }
 
-        fn get_user_referral_codes(
-            self: @ContractState, user: ContractAddress
-        ) -> Array<felt252> {
+        fn get_user_referral_codes(self: @ContractState, user: ContractAddress) -> Array<felt252> {
             let mut result = ArrayTrait::new();
             let codes_count = self.user_referral_codes_count.read(user);
             let mut i = 0;
@@ -517,44 +507,48 @@ pub mod Referral {
             self.reentrancy_guard.start();
             self._assert_not_paused();
             let caller = get_caller_address();
-            
+
             let pending_amount = self.pending_rewards.read(caller);
             assert!(pending_amount > 0, "No pending rewards");
-            
+
             // Clear pending rewards
             self.pending_rewards.write(caller, 0);
-            
+
             // Transfer tokens from treasury
             let treasury = ITreasuryDispatcher { contract_address: self.treasury_contract.read() };
-            
+
             // Withdraw from treasury and transfer to user
             treasury.withdraw_from_pool('REWARDS_POOL', pending_amount, caller);
 
             let current_time = get_block_timestamp();
-            self.emit(RewardsClaimed {
-                claimer: caller,
-                amount: pending_amount,
-                timestamp: current_time,
-            });
-            
+            self
+                .emit(
+                    RewardsClaimed {
+                        claimer: caller, amount: pending_amount, timestamp: current_time,
+                    },
+                );
+
             self.reentrancy_guard.end();
             pending_amount
         }
 
         fn calculate_referral_rewards(
-            self: @ContractState, referrer: ContractAddress, referee: ContractAddress
+            self: @ContractState, referrer: ContractAddress, referee: ContractAddress,
         ) -> (u256, u256) {
             let config = self.reward_config.read();
             (config.referrer_reward, config.referee_reward)
         }
 
         fn distribute_referral_rewards(
-            ref self: ContractState, referrer: ContractAddress, referee: ContractAddress
+            ref self: ContractState, referrer: ContractAddress, referee: ContractAddress,
         ) -> u32 {
             self._assert_not_paused();
             let caller = get_caller_address();
-            assert!(caller == self.ownable.owner() || caller == self.game_contract.read(), "Not authorized");
-            
+            assert!(
+                caller == self.ownable.owner() || caller == self.game_contract.read(),
+                "Not authorized",
+            );
+
             self._distribute_referral_rewards_internal(referrer, referee)
         }
 
@@ -563,7 +557,7 @@ pub mod Referral {
         }
 
         fn get_user_reward_claims(
-            self: @ContractState, user: ContractAddress
+            self: @ContractState, user: ContractAddress,
         ) -> Array<ReferralRewardClaim> {
             let mut result = ArrayTrait::new();
             let claims_count = self.user_reward_claims_count.read(user);
@@ -581,13 +575,16 @@ pub mod Referral {
         fn set_reward_config(ref self: ContractState, config: ReferralRewardConfig) {
             self.ownable.assert_only_owner();
             self.reward_config.write(config);
-            
-            self.emit(ConfigUpdated {
-                admin: get_caller_address(),
-                referrer_reward: config.referrer_reward,
-                referee_reward: config.referee_reward,
-                min_game_score: config.min_game_score,
-            });
+
+            self
+                .emit(
+                    ConfigUpdated {
+                        admin: get_caller_address(),
+                        referrer_reward: config.referrer_reward,
+                        referee_reward: config.referee_reward,
+                        min_game_score: config.min_game_score,
+                    },
+                );
         }
 
         fn get_reward_config(self: @ContractState) -> ReferralRewardConfig {
@@ -595,7 +592,7 @@ pub mod Referral {
         }
 
         fn update_reward_amounts(
-            ref self: ContractState, referrer_reward: u256, referee_reward: u256
+            ref self: ContractState, referrer_reward: u256, referee_reward: u256,
         ) {
             self.ownable.assert_only_owner();
             let mut config = self.reward_config.read();
@@ -641,7 +638,7 @@ pub mod Referral {
 
         // Anti-abuse and Security
         fn is_self_referral(
-            self: @ContractState, referrer: ContractAddress, referee: ContractAddress
+            self: @ContractState, referrer: ContractAddress, referee: ContractAddress,
         ) -> bool {
             referrer == referee
         }
@@ -659,21 +656,15 @@ pub mod Referral {
         fn ban_user(ref self: ContractState, user: ContractAddress) {
             self.ownable.assert_only_owner();
             self.banned_users.write(user, true);
-            
-            self.emit(UserBanned {
-                user,
-                admin: get_caller_address(),
-            });
+
+            self.emit(UserBanned { user, admin: get_caller_address() });
         }
 
         fn unban_user(ref self: ContractState, user: ContractAddress) {
             self.ownable.assert_only_owner();
             self.banned_users.write(user, false);
-            
-            self.emit(UserUnbanned {
-                user,
-                admin: get_caller_address(),
-            });
+
+            self.emit(UserUnbanned { user, admin: get_caller_address() });
         }
 
         fn is_user_banned(self: @ContractState, user: ContractAddress) -> bool {
@@ -692,19 +683,15 @@ pub mod Referral {
         fn pause_system(ref self: ContractState) {
             self.ownable.assert_only_owner();
             self.paused.write(true);
-            
-            self.emit(SystemPaused {
-                admin: get_caller_address(),
-            });
+
+            self.emit(SystemPaused { admin: get_caller_address() });
         }
 
         fn unpause_system(ref self: ContractState) {
             self.ownable.assert_only_owner();
             self.paused.write(false);
-            
-            self.emit(SystemUnpaused {
-                admin: get_caller_address(),
-            });
+
+            self.emit(SystemUnpaused { admin: get_caller_address() });
         }
 
         fn is_paused(self: @ContractState) -> bool {
@@ -735,20 +722,21 @@ pub mod Referral {
             ref self: ContractState,
             codes: Array<felt252>,
             max_uses: Array<u32>,
-            expiry_times: Array<u64>
+            expiry_times: Array<u64>,
         ) -> Array<bool> {
             self.ownable.assert_only_owner();
             let mut results = ArrayTrait::new();
             let len = codes.len();
             assert!(len == max_uses.len() && len == expiry_times.len(), "Array length mismatch");
-            
+
             let mut i = 0;
             while i < len {
-                let success = self.create_referral_code(*codes.at(i), *max_uses.at(i), *expiry_times.at(i));
+                let success = self
+                    .create_referral_code(*codes.at(i), *max_uses.at(i), *expiry_times.at(i));
                 results.append(success);
                 i += 1;
             };
-            
+
             results
         }
 
@@ -763,7 +751,7 @@ pub mod Referral {
         }
 
         fn get_user_referrals(
-            self: @ContractState, user: ContractAddress
+            self: @ContractState, user: ContractAddress,
         ) -> Array<ContractAddress> {
             let mut referrals = array![];
             let count = self.user_referrals_count.read(user);
@@ -780,7 +768,7 @@ pub mod Referral {
             (
                 self.get_total_referral_codes_created(),
                 self.get_total_referral_relationships(),
-                self.get_total_rewards_distributed()
+                self.get_total_rewards_distributed(),
             )
         }
     }
@@ -802,16 +790,17 @@ pub mod Referral {
         }
 
         fn _distribute_referral_rewards_internal(
-            ref self: ContractState, referrer: ContractAddress, referee: ContractAddress
+            ref self: ContractState, referrer: ContractAddress, referee: ContractAddress,
         ) -> u32 {
-            let (referrer_reward, referee_reward) = self.calculate_referral_rewards(referrer, referee);
-            
+            let (referrer_reward, referee_reward) = self
+                .calculate_referral_rewards(referrer, referee);
+
             let claim_id = self.next_claim_id.read();
             self.next_claim_id.write(claim_id + 1);
-            
+
             let current_time = get_block_timestamp();
             let tx_info = get_tx_info().unbox();
-            
+
             let claim = ReferralRewardClaim {
                 claim_id,
                 referrer,
@@ -821,46 +810,47 @@ pub mod Referral {
                 claimed_at: current_time,
                 transaction_hash: tx_info.transaction_hash,
             };
-            
+
             self.reward_claims.write(claim_id, claim);
-            
+
             // Add to user reward claims
             let referrer_claims_count = self.user_reward_claims_count.read(referrer);
             self.user_reward_claims.write((referrer, referrer_claims_count), claim_id);
             self.user_reward_claims_count.write(referrer, referrer_claims_count + 1);
-            
+
             let referee_claims_count = self.user_reward_claims_count.read(referee);
             self.user_reward_claims.write((referee, referee_claims_count), claim_id);
             self.user_reward_claims_count.write(referee, referee_claims_count + 1);
-            
+
             // Update pending rewards for immediate claim
             let mut referrer_pending = self.pending_rewards.read(referrer);
             referrer_pending += referrer_reward;
             self.pending_rewards.write(referrer, referrer_pending);
-            
+
             let mut referee_pending = self.pending_rewards.read(referee);
             referee_pending += referee_reward;
             self.pending_rewards.write(referee, referee_pending);
-            
+
             // Update total rewards distributed
-            let total_distributed = self.total_rewards_distributed.read() + referrer_reward + referee_reward;
+            let total_distributed = self.total_rewards_distributed.read()
+                + referrer_reward
+                + referee_reward;
             self.total_rewards_distributed.write(total_distributed);
-            
+
             // Update referrer stats
             let mut referrer_stats = self.referral_stats.read(referrer);
             referrer_stats.total_rewards_earned += referrer_reward;
             referrer_stats.pending_rewards += referrer_reward;
             self.referral_stats.write(referrer, referrer_stats);
-            
-            self.emit(RewardsDistributed {
-                referrer,
-                referee,
-                referrer_reward,
-                referee_reward,
-                claim_id,
-            });
-            
+
+            self
+                .emit(
+                    RewardsDistributed {
+                        referrer, referee, referrer_reward, referee_reward, claim_id,
+                    },
+                );
+
             claim_id
         }
     }
-} 
+}

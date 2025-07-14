@@ -195,7 +195,9 @@ pub mod StarkMoleGame {
             if is_first_game {
                 let referral_contract_addr = self.referral_contract.read();
                 if !referral_contract_addr.is_zero() {
-                    let referral_contract = IReferralDispatcher { contract_address: referral_contract_addr };
+                    let referral_contract = IReferralDispatcher {
+                        contract_address: referral_contract_addr,
+                    };
                     // Call complete_referral with the player and their final score
                     // This will trigger rewards if the player was referred and meets minimum score
                     referral_contract.complete_referral(caller, final_score);
