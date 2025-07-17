@@ -8,6 +8,7 @@ pub trait IStarkMoleGame<TContractState> {
     fn end_game(ref self: TContractState, game_id: u64) -> u64;
     fn get_game_score(self: @TContractState, game_id: u64) -> u64;
     fn get_player_stats(self: @TContractState, player: ContractAddress) -> (u64, u64, u64);
+    fn set_referral_contract(ref self: TContractState, referral_contract: ContractAddress);
 }
 
 // Public interface combining lightweight game access

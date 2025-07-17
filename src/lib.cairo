@@ -12,6 +12,7 @@ pub mod interfaces {
     pub mod rewards;
     pub mod treasury;
     pub mod challenge;
+    pub mod referral;
 }
 pub mod leaderboard {
     pub mod leaderboard;
@@ -27,6 +28,9 @@ pub mod treasury {
 }
 pub mod challenge {
     pub mod challenge_scheduler;
+}
+pub mod referral {
+    pub mod referral;
 }
 pub mod types;
 pub mod utils;
