@@ -1,6 +1,7 @@
 #[starknet::contract]
 pub mod StarkMoleGame {
     use starkmole::interfaces::game::IStarkMoleGame;
+    use starkmole::interfaces::analytics::{IAnalyticsDispatcher, IAnalyticsDispatcherTrait};
     use starkmole::interfaces::referral::{IReferralDispatcher, IReferralDispatcherTrait};
     use starkmole::utils::{calculate_score_multiplier, get_pseudo_random, is_valid_mole_position};
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
@@ -17,6 +18,7 @@ pub mod StarkMoleGame {
         hit_cooldown: u64,
         owner: ContractAddress,
         referral_contract: ContractAddress,
+        analytics_contract: ContractAddress,
     }
 
     #[derive(Drop, Serde, starknet::Store, Clone)]
@@ -115,6 +117,14 @@ pub mod StarkMoleGame {
 
             self.emit(GameStarted { game_id, player: caller, start_time: current_time });
 
+            // Analytics: log session start if analytics is configured
+            let analytics_addr = self.analytics_contract.read();
+            if !analytics_addr.is_zero() {
+                let analytics = IAnalyticsDispatcher { contract_address: analytics_addr };
+                let day: u64 = current_time / 86400_u64;
+                analytics.log_session_start(caller, day);
+            }
+
             game_id
         }
 
@@ -206,6 +216,14 @@ pub mod StarkMoleGame {
 
             self.emit(GameEnded { game_id, player: caller, final_score, total_hits: game.hits });
 
+            // Analytics: log session end
+            let analytics_addr = self.analytics_contract.read();
+            if !analytics_addr.is_zero() {
+                let analytics = IAnalyticsDispatcher { contract_address: analytics_addr };
+                let day: u64 = game.end_time / 86400_u64;
+                analytics.log_session_end(caller, day);
+            }
+
             final_score
         }
 
@@ -223,6 +241,12 @@ pub mod StarkMoleGame {
             let caller = get_caller_address();
             assert(caller == self.owner.read(), 'Only owner can set referral');
             self.referral_contract.write(referral_contract);
+        }
+
+        fn set_analytics_contract(ref self: ContractState, analytics_contract: ContractAddress) {
+            let caller = get_caller_address();
+            assert(caller == self.owner.read(), 'Only owner can set analytics');
+            self.analytics_contract.write(analytics_contract);
         }
     }
 }
