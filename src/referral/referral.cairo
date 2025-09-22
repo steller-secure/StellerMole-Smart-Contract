@@ -8,6 +8,7 @@ pub mod Referral {
     use core::num::traits::Zero;
 
     use starkmole::interfaces::referral::IReferral;
+    use starkmole::interfaces::analytics::{IAnalyticsDispatcher, IAnalyticsDispatcherTrait};
     use starkmole::interfaces::treasury::{ITreasuryDispatcher, ITreasuryDispatcherTrait};
     use starkmole::types::{
         ReferralCode, ReferralRelationship, ReferralStats, ReferralRewardConfig,
@@ -58,6 +59,7 @@ pub mod Referral {
         game_contract: ContractAddress,
         treasury_contract: ContractAddress,
         token_contract: ContractAddress,
+        analytics_contract: ContractAddress,
         // System state
         paused: bool,
         total_codes_created: u32,
@@ -197,6 +199,7 @@ pub mod Referral {
         self.game_contract.write(game_contract);
         self.treasury_contract.write(treasury_contract);
         self.token_contract.write(token_contract);
+        self.analytics_contract.write(ContractAddress::from(0));
 
         // Initialize default reward configuration
         let default_config = ReferralRewardConfig {
@@ -389,6 +392,14 @@ pub mod Referral {
                         referrer, referee: caller, referral_code, timestamp: current_time,
                     },
                 );
+
+            // Analytics: log referral registration
+            let analytics_addr = self.analytics_contract.read();
+            if !analytics_addr.is_zero() {
+                let analytics = IAnalyticsDispatcher { contract_address: analytics_addr };
+                let day: u64 = current_time / 86400_u64;
+                analytics.log_referral(referrer, caller, day);
+            }
 
             true
         }
@@ -622,6 +633,11 @@ pub mod Referral {
         fn set_token_contract(ref self: ContractState, token_contract: ContractAddress) {
             self.ownable.assert_only_owner();
             self.token_contract.write(token_contract);
+        }
+
+        fn set_analytics_contract(ref self: ContractState, analytics_contract: ContractAddress) {
+            self.ownable.assert_only_owner();
+            self.analytics_contract.write(analytics_contract);
         }
 
         fn get_game_contract(self: @ContractState) -> ContractAddress {
